@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartedu.modules.study.mapper.StudyNoteMapper">
+
+    <resultMap id="BaseResultMap" type="com.smartedu.modules.study.entity.StudyNote">
+        <id column="id" property="id"/>
+        <result column="student_id" property="studentId"/>
+        <result column="course_id" property="courseId"/>
+        <result column="lesson_id" property="lessonId"/>
+        <result column="note_title" property="noteTitle"/>
+        <result column="note_content" property="noteContent"/>
+        <result column="is_favorite" property="isFavorite"/>
+        <result column="deleted" property="deleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 分页查询学生笔记 -->
+    <select id="selectStudentNotePage" resultMap="BaseResultMap">
+        SELECT * FROM study_note
+        WHERE student_id = #{studentId} AND deleted = 0
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        <if test="lessonId != null">
+            AND lesson_id = #{lessonId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (note_title LIKE CONCAT('%', #{keyword}, '%')
+            OR note_content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

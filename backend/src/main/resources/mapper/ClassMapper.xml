@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartedu.modules.classroom.mapper.ClassMapper">
+
+    <resultMap id="BaseResultMap" type="com.smartedu.modules.classroom.entity.Class">
+        <id column="id" property="id"/>
+        <result column="class_code" property="classCode"/>
+        <result column="class_name" property="className"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="max_students" property="maxStudents"/>
+        <result column="current_students" property="currentStudents"/>
+        <result column="status" property="status"/>
+        <result column="join_code" property="joinCode"/>
+        <result column="join_code_expire" property="joinCodeExpire"/>
+        <result column="deleted" property="deleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectTeacherClassPage" resultMap="BaseResultMap">
+        SELECT * FROM edu_class
+        WHERE teacher_id = #{teacherId} AND deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (class_name LIKE CONCAT('%', #{keyword}, '%') OR class_code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectStudentClasses" resultMap="BaseResultMap">
+        SELECT c.* FROM edu_class c
+        INNER JOIN edu_class_student cs ON c.id = cs.class_id
+        WHERE cs.student_id = #{studentId} AND cs.status = 1 AND c.deleted = 0 AND cs.deleted = 0
+        ORDER BY c.create_time DESC
+    </select>
+    <select id="selectAvailableExamsForStudent" resultType="com.smartedu.modules.exam.entity.Exam">
+        SELECT e.* FROM edu_exam e
+        WHERE e.status = 1  <!-- 已发布 -->
+        AND e.deleted = 0
+        AND e.end_time > NOW()  <!-- 未结束 -->
+        AND NOT EXISTS (
+        SELECT 1 FROM edu_exam_record r
+        WHERE r.exam_id = e.id
+        AND r.student_id = #{studentId}
+        AND r.status IN (1, 2)  <!-- 排除已提交或已批改的记录 -->
+        )
+        ORDER BY e.start_time ASC
+    </select>
+
+</mapper>

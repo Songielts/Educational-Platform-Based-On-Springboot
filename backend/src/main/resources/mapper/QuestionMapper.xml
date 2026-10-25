@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartedu.modules.exam.mapper.QuestionMapper">
+
+    <resultMap id="BaseResultMap" type="com.smartedu.modules.exam.entity.Question">
+        <id column="id" property="id"/>
+        <result column="bank_id" property="bankId"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="question_type" property="questionType"/>
+        <result column="question_content" property="questionContent"/>
+        <result column="question_options" property="questionOptions" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="correct_answer" property="correctAnswer"/>
+        <result column="answer_analysis" property="answerAnalysis"/>
+        <result column="difficulty_level" property="difficultyLevel"/>
+        <result column="knowledge_tags" property="knowledgeTags" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="score" property="score"/>
+        <result column="usage_count" property="usageCount"/>
+        <result column="correct_count" property="correctCount"/>
+        <result column="deleted" property="deleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByBankId" resultMap="BaseResultMap">
+        SELECT * FROM edu_question
+        WHERE bank_id = #{bankId} AND deleted = 0
+        <if test="questionType != null">
+            AND question_type = #{questionType}
+        </if>
+        <if test="difficultyLevel != null">
+            AND difficulty_level = #{difficultyLevel}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectRandomQuestions" resultMap="BaseResultMap">
+        SELECT * FROM edu_question
+        WHERE bank_id = #{bankId} AND deleted = 0
+        <if test="questionType != null">
+            AND question_type = #{questionType}
+        </if>
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
+
+</mapper>

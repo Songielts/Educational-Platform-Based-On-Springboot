@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smartedu.modules.course.mapper.CourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.smartedu.modules.course.entity.Course">
+        <id column="id" property="id"/>
+        <result column="course_name" property="courseName"/>
+        <result column="course_code" property="courseCode"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="subject_id" property="subjectId"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="education_stage" property="educationStage"/>
+        <result column="difficulty_level" property="difficultyLevel"/>
+        <result column="duration_hours" property="durationHours"/>
+        <result column="status" property="status"/>
+        <result column="is_public" property="isPublic"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favorite_count" property="favoriteCount"/>
+        <result column="deleted" property="deleted"/>
+        <result column="publish_time" property="publishTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectPublicCoursePage" resultMap="BaseResultMap">
+        SELECT * FROM edu_course
+        WHERE status = 2 AND is_public = 1 AND (deleted = 0 OR deleted IS NULL)
+        <if test="keyword != null and keyword != ''">
+            AND course_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="subjectId != null">
+            AND subject_id = #{subjectId}
+        </if>
+        <if test="educationStage != null">
+            AND education_stage = #{educationStage}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectTeacherCoursePage" resultMap="BaseResultMap">
+        SELECT * FROM edu_course
+        WHERE teacher_id = #{teacherId} AND (deleted = 0 OR deleted IS NULL)
+        <if test="keyword != null and keyword != ''">
+            AND course_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectClassCourses" resultMap="BaseResultMap">
+        SELECT c.* FROM edu_course c
+        INNER JOIN edu_class_course cc ON c.id = cc.course_id
+        WHERE cc.class_id = #{classId} AND (c.deleted = 0 OR c.deleted IS NULL) AND (cc.deleted = 0 OR cc.deleted IS NULL)
+        ORDER BY cc.assign_time DESC
+    </select>
+
+    <resultMap id="StudentCourseResultMap" type="com.smartedu.modules.course.dto.StudentCourseVO">
+        <id column="course_id" property="courseId"/>
+        <result column="course_name" property="courseName"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="teacher_name" property="teacherName"/>
+        <result column="total_lessons" property="totalLessons"/>
+        <result column="completed_lessons" property="completedLessons"/>
+        <result column="completion_rate" property="completionRate"/>
+        <result column="last_study_time" property="lastStudyTime"/>
+    </resultMap>
+
+    <select id="selectStudentCourses" resultMap="StudentCourseResultMap">
+        SELECT
+        c.id as course_id,
+        c.course_name,
+        c.cover_image,
+        u.real_name as teacher_name,
+        (SELECT COUNT(*) FROM edu_lesson l
+        INNER JOIN edu_chapter ch ON l.chapter_id = ch.id
+        WHERE ch.course_id = c.id AND (l.deleted = 0 OR l.deleted IS NULL) AND (ch.deleted = 0 OR ch.deleted IS NULL)) as total_lessons,
+        COALESCE(scs.completed_lessons, 0) as completed_lessons,
+        COALESCE(scs.completion_rate, 0) as completion_rate,
+        esc.create_time as last_study_time
+        FROM edu_course c
+        INNER JOIN edu_student_course esc ON c.id = esc.course_id AND esc.student_id = #{studentId}
+        LEFT JOIN study_course_stat scs ON c.id = scs.course_id AND scs.student_id = #{studentId}
+        LEFT JOIN sys_user u ON c.teacher_id = u.id
+        WHERE (c.deleted = 0 OR c.deleted IS NULL)
+        ORDER BY esc.create_time DESC
+    </select>
+
+</mapper>
